@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap Data-Finance</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #f7f9fb;
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #016464;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h2 {
+      color: #016464;
+      border-bottom: 2px solid #016464;
+      padding-bottom: 5px;
+    }
+    .mois {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .projet {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.3);
+      margin-right: 10px;
+    }
+    .progress-bar {
+      background: #ddd;
+      border-radius: 10px;
+      height: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .progress {
+      background: #016464;
+      height: 10px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📊 Roadmap Data & Finance</h1>
+    <p>Suivi de progression de mes projets</p>
+  </header>
+
+  <main id="roadmap"></main>
+
+  <script>
+    const roadmap = [
+      {
+        mois: "Janvier",
+        theme: "Fondations & Setup",
+        projets: [
+          "Installer Python, VS Code, GitHub",
+          "Créer un repo GitHub et publier un mini projet",
+          "Apprendre HTML / CSS / JS de base",
+          "Découvrir les librairies Python pour la data : Pandas, Numpy"
+        ]
+      },
+      {
+        mois: "Février",
+        theme: "Data Science Financière",
+        projets: [
+          "Collecter et nettoyer des données financières (Yahoo Finance API)",
+          "Créer un tableau de bord simple avec Power BI ou Streamlit",
+          "Analyser les séries temporelles de cours boursiers",
+          "Lire un rapport financier (Bilan et Compte de résultat)"
+        ]
+      },
+      {
+        mois: "Mars",
+        theme: "Finance & Risques",
+        projets: [
+          "Étudier la Value-at-Risk (VaR)",
+          "Construire un modèle de risque de portefeuille",
+          "Simuler des scénarios de marché avec Python",
+          "Automatiser une alerte de risque (volatilité, drawdown)"
+        ]
+      }
+    ];
+
+    const roadmapDiv = document.getElementById('roadmap');
+
+    function loadProgress() {
+      const saved = localStorage.getItem('progress');
+      return saved ? JSON.parse(saved) : {};
+    }
+
+    function saveProgress(progress) {
+      localStorage.setItem('progress', JSON.stringify(progress));
+    }
+
+    const progress = loadProgress();
+
+    roadmap.forEach((mois) => {
+      const moisDiv = document.createElement('div');
+      moisDiv.className = 'mois';
+      const titre = document.createElement('h2');
+      titre.textContent = `${mois.mois} — ${mois.theme}`;
+      moisDiv.appendChild(titre);
+
+      const projetsContainer = document.createElement('div');
+      let doneCount = 0;
+
+      mois.projets.forEach((projet) => {
+        const projetDiv = document.createElement('div');
+        projetDiv.className = 'projet';
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        const id = `${mois.mois}-${projet}`;
+        check.checked = progress[id] || false;
+        check.addEventListener('change', () => {
+          progress[id] = check.checked;
+          saveProgress(progress);
+          updateProgressBar();
+        });
+        const label = document.createElement('label');
+        label.textContent = projet;
+        projetDiv.appendChild(check);
+        projetDiv.appendChild(label);
+        projetsContainer.appendChild(projetDiv);
+        if (check.checked) doneCount++;
+      });
+
+      moisDiv.appendChild(projetsContainer);
+
+      const progressBarContainer = document.createElement('div');
+      progressBarContainer.className = 'progress-bar';
+      const progressBar = document.createElement('div');
+      progressBar.className = 'progress';
+      progressBarContainer.appendChild(progressBar);
+      moisDiv.appendChild(progressBarContainer);
+
+      roadmapDiv.appendChild(moisDiv);
+
+      function updateProgressBar() {
+        const total = mois.projets.length;
+        const done = mois.projets.filter(p => progress[`${mois.mois}-${p}`]).length;
+        progressBar.style.width = `${(done / total) * 100}%`;
+      }
+
+      updateProgressBar();
+    });
+  </script>
+</body>
+</html>
