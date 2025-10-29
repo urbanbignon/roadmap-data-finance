@@ -59,7 +59,40 @@
     }
   </style>
 </head>
-<body>
+<script>
+// Sauvegarde de la progression dans le navigateur
+document.addEventListener("DOMContentLoaded", () => {
+  const checkboxes = document.querySelectorAll("input[type='checkbox']");
+  const progressBars = document.querySelectorAll(".progress");
+
+  // Charger les états sauvegardés
+  checkboxes.forEach((box, i) => {
+    const saved = localStorage.getItem(`roadmap_check_${i}`);
+    if (saved === "true") box.checked = true;
+  });
+
+  // Mettre à jour les barres
+  updateProgress();
+
+  // Quand on coche/décoche
+  checkboxes.forEach((box, i) => {
+    box.addEventListener("change", () => {
+      localStorage.setItem(`roadmap_check_${i}`, box.checked);
+      updateProgress();
+    });
+  });
+
+  // Calcul du pourcentage total
+  function updateProgress() {
+    const total = checkboxes.length;
+    const done = [...checkboxes].filter(b => b.checked).length;
+    const pct = (done / total) * 100;
+    progressBars.forEach(bar => (bar.style.width = `${pct}%`));
+  }
+});
+</script>
+
+  <body>
   <header>
     <h1>📊 Roadmap Data & Finance</h1>
     <p>Suivi de progression de mes projets</p>
