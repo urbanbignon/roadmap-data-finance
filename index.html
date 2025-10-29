@@ -91,6 +91,100 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
+<button id="btn-ics" style="position:fixed;right:16px;bottom:16px;padding:10px 14px;border:0;border-radius:10px;background:#016464;color:#fff;cursor:pointer">
+  📅 Ajouter au Calendrier (ICS)
+</button>
+
+<script>
+// ---- utilitaires calendrier ----
+const MONTHS_FR = {
+  "janvier":1,"février":2,"fevrier":2,"mars":3,"avril":4,"mai":5,"juin":6,
+  "juillet":7,"août":8,"aout":8,"septembre":9,"octobre":10,"novembre":11,"décembre":12,"decembre":12
+};
+function lastDayOfMonth(year, month){ return new Date(year, month, 0).getDate(); }
+function yyyymmdd(d){ const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}${m}${day}`; }
+function uid(){ return (Math.random().toString(36).slice(2)) + "@roadmap-data-finance"; }
+
+// ---- collecte tâches cochées + génération ICS all-day par mois ----
+document.getElementById("btn-ics").addEventListener("click", () => {
+  // année cible (celle affichée dans ton site ; sinon année courante)
+  const year = new Date().getFullYear();
+
+  // Chaque "mois" est un bloc avec un <h2> contenant le nom du mois
+  const sections = document.querySelectorAll(".mois");
+  const events = [];
+
+  sections.forEach(sec => {
+    const h2 = sec.querySelector("h2");
+    if(!h2) return;
+    const moisTxt = h2.textContent.toLowerCase();
+    const match = Object.keys(MONTHS_FR).find(k => moisTxt.includes(k));
+    if(!match) return;
+    const month = MONTHS_FR[match];
+
+    // date = dernier jour du mois (événement sur la journée)
+    const day = lastDayOfMonth(year, month);
+    const dt = new Date(year, month-1, day);
+
+    // tâches cochées dans cette section
+    const items = sec.querySelectorAll("input[type='checkbox']");
+    items.forEach(cb => {
+      if(cb.checked){
+        // Texte de la tâche : cherche le label associé
+        let title = "Tâche roadmap";
+        const label = cb.closest("label") || cb.parentElement;
+        if(label) title = label.innerText.trim();
+
+        events.push({
+          title,
+          date: yyyymmdd(dt),
+          notes: "Roadmap Data & Finance — urbanbignon.github.io/roadmap-data-finance/"
+        });
+      }
+    });
+  });
+
+  if(events.length === 0){
+    alert("Coche au moins une tâche avant d’exporter 😉");
+    return;
+  }
+
+  // Construire le .ics
+  let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Roadmap Data Finance//FR\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
+  const now = yyyymmdd(new Date()) + "T000000Z";
+
+  events.forEach(ev => {
+    ics += "BEGIN:VEVENT\r\n";
+    ics += `UID:${uid()}\r\n`;
+    ics += `DTSTAMP:${now}\r\n`;
+    // All-day event : DTSTART/DTEND au format YYYYMMDD (DTEND exclusif => +1 jour)
+    ics += `DTSTART;VALUE=DATE:${ev.date}\r\n`;
+    // +1 jour
+    const yyyy = parseInt(ev.date.slice(0,4),10);
+    const mm = parseInt(ev.date.slice(4,6),10);
+    const dd = parseInt(ev.date.slice(6,8),10);
+    const end = new Date(yyyy, mm-1, dd+1);
+    ics += `DTEND;VALUE=DATE:${yyyymmdd(end)}\r\n`;
+    ics += `SUMMARY:${ev.title.replace(/[\r\n]/g," ")}\r\n`;
+    ics += `DESCRIPTION:${ev.notes.replace(/[\r\n]/g," ")}\r\n`;
+    ics += "END:VEVENT\r\n";
+  });
+
+  ics += "END:VCALENDAR\r\n";
+
+  // Télécharger
+  const blob = new Blob([ics], {type:"text/calendar;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "roadmap.ics"; document.body.appendChild(a);
+  a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  alert("Fichier ICS généré. Ouvre-le sur iPhone pour l’ajouter au Calendrier.");
+});
+</script>
 
   <body>
   <header>
